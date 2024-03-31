@@ -7,38 +7,8 @@ const { submitTx, submitFrontRunningProtectionTx, submitBatchTx, submitBundleBat
 
 dotenv.config();
 
-(async () => {
-  const tunnel = await localtunnel({ port: 3000 });
-
-  // the assigned public url for your tunnel
-  // i.e. https://abcdefgjhij.localtunnel.me
-  tunnel.url;
-
-  tunnel.on('close', () => {
-    // tunnels are closed
-  });
-})();
-
 async function main() {
     const PORT = process.env.PORT || 3000;
-
-    console.log("Fetching listener...");
-    const callbackList = await getCallbackList()
-    if (callbackList.length < 1) {
-        console.log("Listener not found. Creating...");
-        await registerCallback()
-        console.log("Listener created.");
-    } else {
-        console.log("Listener found. Checking for update...")
-        if(callbackList[0].addresses[0] === process.env.OUT_TOKEN && callbackList[0].callback_url === process.env.API_URL + '/api/callback') {
-            console.log("Update not required")
-        } else {
-            console.log("Updating listener...")
-            await updateCallback(callbackList[0]._id)
-            console.log("Updated listener")
-        }
-    }
-    console.log(`Listening for ${process.env.OUT_TOKEN}`)
 
     console.log('Setting up provider...')
     const provider = new HttpProvider(
@@ -77,6 +47,7 @@ async function main() {
                     if (tripleZero) {
                         buyTx = await submitTx(provider, txData, swapType)
                     }
+                    console.log('Tx Complete')
                     res.statusCode = 200
                     res.end('Success');
                     
@@ -102,6 +73,31 @@ async function main() {
 
     server.listen(PORT, async () => {
         console.log(`Server is running on port ${PORT}`);
+        let tunnel
+        (async () => {
+            tunnel = await localtunnel({ port: 3000 });
+          
+            tunnel.on('close', () => {
+              console.log('Tunnel closed')
+            });
+        })();
+        console.log("Fetching listener...");
+        const callbackList = await getCallbackList()
+        if (callbackList.length < 1) {
+            console.log("Listener not found. Creating...");
+            await registerCallback()
+            console.log("Listener created.");
+        } else {
+            console.log("Listener found. Checking for update...")
+            if(callbackList[0].addresses[0] === process.env.OUT_TOKEN && callbackList[0].callback_url === tunnel.url + '/api/callback') {
+                console.log("Update not required")
+            } else {
+                console.log("Updating listener...")
+                await updateCallback(callbackList[0]._id)
+                console.log("Updated listener")
+            }
+        }
+        console.log(`Listening for ${process.env.OUT_TOKEN}`)
         // if (tripleZero) {
         //     buyTx = await submitTx(provider, txData, swapType)
         // }
