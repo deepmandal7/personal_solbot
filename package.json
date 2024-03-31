@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
   },
   "author": "",
   "license": "ISC",
@@ -14,6 +13,7 @@
     "@shyft-to/js": "^0.2.36",
     "axios": "^1.6.8",
     "dotenv": "^16.4.5",
-    "http": "^0.0.1-security"
+    "http": "^0.0.1-security",
+    "localtunnel": "^2.0.2"
   }
 }
