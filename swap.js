@@ -8,30 +8,9 @@ let outAmount
 
 async function submitTx(provider, txData, swaptType = 1) {
     console.log('Creating swap data...')
-    let txData = await provider.postRaydiumSwap(txData)
-    // if (swaptType == 1) {
-    // let txData
-    //     txData = await provider.postRaydiumSwap({
-    //     ownerAddress: process.env.WALLET_ADDRESS,
-    //     inToken: process.env.IN_TOKEN,
-    //     outToken: process.env.OUT_TOKEN,
-    //     inAmount: 0.001,
-    //     slippage: 0.1,
-    //     computePrice: String((parseFloat(process.env.BUY_PRIORITY_FEE) * LAMPORTS_PER_SOL)),
-    // })
-    // } else {
-    // txData = {
-    //     "ownerAddress": process.env.WALLET_ADDRESS,
-    //     "inToken": process.env.OUT_TOKEN,
-    //     "outToken": process.env.IN_TOKEN,
-    //     "inAmount": parseFloat(outAmount),
-    //     "slippage": parseFloat(process.env.SELL_SLIPPAGE),
-    //     "computePrice": parseFloat(process.env.SELL_PRIORITY_FEE) * LAMPORTS_PER_SOL,
-    // }
-    // }
-    console.log('Swap data created', txData)
-    console.log('Sending tx...')
-    const sign = await provider.signAndSubmitTx({ content: txData.transactions[0].content }, true, false, false)
+    let swapData = await provider.postRaydiumSwap(txData)
+    console.log('Swap data created. Sending tx...', swapData)
+    const sign = await provider.signAndSubmitTx({ content: swapData.transactions[0].content }, true, false, false)
     return sign && sign.signature ? sign.signature : 'Failed to send tx'
 }
 

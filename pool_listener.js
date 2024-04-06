@@ -11,11 +11,11 @@ const getCallbackList = async () => {
   return callbackList.data.result
 };
 
-const registerCallback = async () => {
+const registerCallback = async (tunnelUrl) => {
   await axios.post(process.env.SHYFT_URL + '/sol/v1/callback/create', {
     "network": Network.Mainnet,
     "addresses": [process.env.OUT_TOKEN],
-    "callback_url": process.env.API_URL + '/api/callback',
+    "callback_url": tunnelUrl + '/api/callback',
     "events": [
       TxnAction.CREATE_POOL
     ]
@@ -27,11 +27,11 @@ const registerCallback = async () => {
   })
 };
 
-const updateCallback = async (callbackId) => {
+const updateCallback = async (callbackId, tunnelUrl) => {
   await axios.post(process.env.SHYFT_URL + '/sol/v1/callback/update', {
       "id": callbackId,
       "addresses": [process.env.OUT_TOKEN],
-      "callback_url": process.env.API_URL + '/api/callback',
+      "callback_url": tunnelUrl + '/api/callback',
     },
      {
       headers: {
@@ -71,6 +71,5 @@ const updateCallback = async (callbackId) => {
 module.exports = {
   registerCallback,
   getCallbackList,
-  handleCallback,
   updateCallback
 };

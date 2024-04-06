@@ -7,6 +7,9 @@ const { submitTx, submitFrontRunningProtectionTx, submitBatchTx, submitBundleBat
 
 dotenv.config();
 
+const LAMPORTS_PER_SOL = 1000000000
+const MICROLAMPORTS_PER_SOL = LAMPORTS_PER_SOL * 1000000
+
 async function main() {
     const PORT = process.env.PORT || 3000;
 
@@ -43,22 +46,15 @@ async function main() {
             req.on('end', async () => {
                 try {
                     const data = JSON.parse(body);
-                    console.log('-----Pool created-----')
-                    if (tripleZero) {
-                        buyTx = await submitTx(provider, txData, swapType)
+                    if(req.data) {
+                        console.log('-----Pool created-----')
+                        if (tripleZero) {
+                            buyTx = await submitTx(provider, txData)
+                        }
+                        console.log('Tx Complete')
+                        res.statusCode = 200
+                        res.end('Success');   
                     }
-                    console.log('Tx Complete')
-                    res.statusCode = 200
-                    res.end('Success');
-                    
-                    // const tx = await createSwapTxn(process.env.IN_TOKEN, process.env.OUT_TOKEN, process.env.IN_AMOUNT, process.env.BUY_SLIPPAGE, process.env.BUY_PRIORITY_FEE, process.env.BUY_TIP)
-                    // if (process.env.BUY_BUNDLE == 1) {
-                    //     await submitSignedTransactionBatch(tx, true)
-                    // } else if (process.env.BUY_FRONT_RUNNING_PROTECTION == 1) {
-                    //     await submitSignedTransaction(tx, true)
-                    // } else if (process.env.BUY_FRONT_RUNNING_PROTECTION == 0) {
-                    //     await submitSignedTransaction(tx, false)
-                    // }    
                 } catch (error) {
                     console.error('Error parsing JSON:', error);
                     res.statusCode = 400;
@@ -73,59 +69,30 @@ async function main() {
 
     server.listen(PORT, async () => {
         console.log(`Server is running on port ${PORT}`);
-        let tunnel
         (async () => {
-            tunnel = await localtunnel({ port: 3000 });
-          
-            tunnel.on('close', () => {
-              console.log('Tunnel closed')
-            });
-        })();
+        const tunnel = await localtunnel({ port: PORT });
+        tunnel.on('close', () => {
+            // tunnels are closed
+          });
+        console.log('Tunnel URL is', tunnel.url)
         console.log("Fetching listener...");
         const callbackList = await getCallbackList()
         if (callbackList.length < 1) {
             console.log("Listener not found. Creating...");
-            await registerCallback()
+            await registerCallback(tunnel.url)
             console.log("Listener created.");
         } else {
-            console.log("Listener found. Checking for update...")
+            console.log("Listener found")
             if(callbackList[0].addresses[0] === process.env.OUT_TOKEN && callbackList[0].callback_url === tunnel.url + '/api/callback') {
                 console.log("Update not required")
             } else {
                 console.log("Updating listener...")
-                await updateCallback(callbackList[0]._id)
+                await updateCallback(callbackList[0]._id, tunnel.url)
                 console.log("Updated listener")
             }
         }
         console.log(`Listening for ${process.env.OUT_TOKEN}`)
-        // if (tripleZero) {
-        //     buyTx = await submitTx(provider, txData, swapType)
-        // }
-        //  else if (process.env.BUY_FRONT_RUNNING_PROTECTION == 1 && process.env.BUY_BUNDLE == 0 && process.env.BUY_BATCH == 0) {
-        //     await submitFrontRunningProtectionTx(1)
-        // } else if (process.env.BUY_FRONT_RUNNING_PROTECTION == 0 && process.env.BUY_BUNDLE == 0 && process.env.BUY_BATCH == 1) {
-        //     await submitBatchTx(1)
-        // } else if (process.env.BUY_FRONT_RUNNING_PROTECTION == 0 && process.env.BUY_BUNDLE == 1 && process.env.BUY_BATCH == 1) {
-        //     await submitBundleBatchTx(1)
-        // }
-
-        // console.log("Fetching listener...");
-        // const callbackList = await getCallbackList()
-        // if (callbackList.length < 1) {
-        //     console.log("Listener not found. Creating...");
-        //     await registerCallback()
-        //     console.log("Listener created.");
-        // } else {
-        //     console.log("Listener found. Checking for update...")
-        //     if(callbackList[0].addresses[0] === process.env.OUT_TOKEN && callbackList[0].callback_url === process.env.API_URL + '/api/callback') {
-        //         console.log("Update not required")
-        //     } else {
-        //         console.log("Updating listener...")
-        //         await updateCallback(callbackList[0]._id)
-        //         console.log("Updated listener")
-        //     }
-        // }
-        // console.log(`Listening for ${process.env.OUT_TOKEN}`)
+        })()
     });
 }
 main()
